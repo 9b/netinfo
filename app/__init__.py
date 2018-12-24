@@ -48,10 +48,13 @@ def check_asndb(f):
     def decorated_function(*args, **kwargs):
         config = json.load(open('%s/resources/config.json' % app_base))
         delta = (now_time() - load_time(config['last_update'])).seconds
-        if delta > 1800:
-            app.config['ASNDB'] = pyasn.pyasn('%s/resources/current' % app_base,
-                                              as_names_file='%s/resources/as_names.json' % app_base)
-            app.config['ASNDB'].loaded = config['file']
+        if delta > 1800 or not app.config['ASNDB']:
+            try:
+                app.config['ASNDB'] = pyasn.pyasn('%s/resources/current' % app_base,
+                                                  as_names_file='%s/resources/as_names.json' % app_base)
+                app.config['ASNDB'].loaded = config['file']
+            except Exception as e:
+                raise Exception("Database has not been initialized.")
         return f(*args, **kwargs)
     return decorated_function
 
@@ -74,12 +77,10 @@ def create_app(debug=False):
     if not state:
         sys.exit(1)
     app = Flask(__name__, static_folder='./resources')
-    app.config['SECRET_KEY'] = 'RYVl4Fg3n1JLDaxWyr1m'
+    app.config['SECRET_KEY'] = 'tRSn3mh2bY3@1$W2T9aQ'
     app.config['MONGO_DBNAME'] = 'netinfo'
     app.config['MONGO_HOST'] = 'localhost'
-    app.config['ASNDB'] = pyasn.pyasn('%s/resources/current' % app_base,
-                                      as_names_file='%s/resources/as_names.json' % app_base)
-    app.config['ASNDB'].loaded = None
+    app.config['ASNDB'] = None
     muri = "mongodb://%s:27017/%s" % (app.config['MONGO_HOST'],
                                       app.config['MONGO_DBNAME'])
     app.config['MONGO_URI'] = muri
@@ -88,10 +89,6 @@ def create_app(debug=False):
         CELERY_BROKER_URL='redis://localhost:6379',
         CELERY_RESULT_BACKEND='redis://localhost:6379',
         CELERYBEAT_SCHEDULE={
-            # 'heartbeat': {
-            #     'task': 'heartbeat',
-            #     'schedule': crontab(minute='*')
-            # },
             'fetch': {
                 'task': 'fetch',
                 'schedule': crontab(minute='*/5')

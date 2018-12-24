@@ -1,0 +1,15 @@
+<html>
+<body>
+    <h1>Status</h1>
+    {% if not config['file'] %}
+    <p>Not configured. Click <a href="/force-db">here</a> to initialize the database.</p>
+    {% else %}
+    <p>Ready to rock.</p>
+    <p>Example call: <a href="/lookup?ip=8.8.8.8">/lookup?ip=8.8.8.8</a></p>
+    {% endif %}
+
+    <h1>Configuration</h1>
+    <p>Last Updated: {{config['last_update']}}</p>
+    <p>Last File: {{config['file']}}</p>
+</body>
+</html>

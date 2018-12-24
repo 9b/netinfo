@@ -48,9 +48,9 @@ def to_download():
 
 
 @celery.task(name="fetch")
-def fetch():
+def fetch(force=False):
     """Process the routeview data."""
-    if not to_download():
+    if not to_download() or not force:
         return
     logger.debug("Downloading the latest RIB")
     meta = gen_request()
