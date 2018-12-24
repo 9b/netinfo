@@ -1,0 +1,13 @@
+[Unit]
+Description=NetInfo celery daemon
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/netinfo
+Environment="PATH=/opt/netinfo/venv3/bin"
+ExecStart=/opt/netinfo/venv3/bin/celery worker -A worker.celery --loglevel=info -B
+
+[Install]
+WantedBy=multi-user.target
