@@ -1,0 +1,13 @@
+[Unit]
+Description=NetInfo webserver and API
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/netinfo
+Environment="PATH=/opt/netinfo/venv3/bin"
+ExecStart=/opt/netinfo/venv3/bin/uwsgi --ini wsgi.ini
+
+[Install]
+WantedBy=multi-user.target
