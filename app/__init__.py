@@ -85,8 +85,8 @@ def create_app(debug=False):
     app.config['MONGO_URI'] = muri
     mongo.init_app(app)
     app.config.update(
-        CELERY_BROKER_URL='redis://localhost:6379',
-        CELERY_RESULT_BACKEND='redis://localhost:6379',
+        CELERY_BROKER_URL='redis://localhost:6379/0',
+        CELERY_RESULT_BACKEND='redis://localhost:6379/0',
         CELERYBEAT_SCHEDULE={
             # 'heartbeat': {
             #     'task': 'heartbeat',
