@@ -4,6 +4,10 @@ NetInfo is a simple IP enrichment service to provide additional data related to 
 
 Getting Started
 ---------------
+Grab the dependencies::
+
+    $ apt-get install redis-server rabbitmq-server
+
 Check out netinfo to `/opt/`::
 
     $ cd /opt && git clone https://github.com/9b/netinfo.git

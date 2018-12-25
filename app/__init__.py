@@ -15,12 +15,11 @@ from flask import current_app as app
 from app.utils.helpers import now_time, load_time
 
 APP_NAME = 'netinfo'
-
-app_base = os.path.dirname(os.path.realpath(__file__))
+APP_BASE = os.path.dirname(os.path.realpath(__file__))
+REFRESH_TIME = 1800
 
 mongo = PyMongo()
 celery = Celery(APP_NAME)
-
 logger = logging.getLogger(APP_NAME)
 logger.setLevel(logging.DEBUG)
 shandler = logging.StreamHandler(sys.stdout)
@@ -43,15 +42,22 @@ def page_not_found(e):
 
 
 def check_asndb(f):
-    """Check if the ASN database should be updated."""
+    """Check if the ASN database should be updated.
+
+    This wraps any call to the API to ensure the version of the database is
+    always the most current. The PyASN database remains in a global variable
+    exposed by Flask. Celery will update the configuration file after a new
+    RIB has been downloaded and processed. That serves as the trigger data in
+    order to reload the database or not.
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        config = json.load(open('%s/resources/config.json' % app_base))
+        config = json.load(open('%s/resources/config.json' % APP_BASE))
         delta = (now_time() - load_time(config['last_update'])).seconds
-        if delta > 1800 or not app.config['ASNDB']:
+        if delta > REFRESH_TIME or not app.config['ASNDB']:
             try:
-                app.config['ASNDB'] = pyasn.pyasn('%s/resources/current' % app_base,
-                                                  as_names_file='%s/resources/as_names.json' % app_base)
+                app.config['ASNDB'] = pyasn.pyasn('%s/resources/current' % APP_BASE,
+                                                  as_names_file='%s/resources/as_names.json' % APP_BASE)
                 app.config['ASNDB'].loaded = config['file']
             except Exception as e:
                 raise Exception("Database has not been initialized.")
@@ -68,6 +74,15 @@ def housekeeping():
         return False
     except Exception as e:
         pass
+
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind(('0.0.0.0', 5672))
+        raise Exception("[!] RabbitMQ does not appear to be running")
+        return False
+    except Exception as e:
+        pass
+
     return True
 
 
@@ -81,6 +96,7 @@ def create_app(debug=False):
     app.config['MONGO_DBNAME'] = 'netinfo'
     app.config['MONGO_HOST'] = 'localhost'
     app.config['ASNDB'] = None
+    app.config['DEBUG'] = debug
     muri = "mongodb://%s:27017/%s" % (app.config['MONGO_HOST'],
                                       app.config['MONGO_DBNAME'])
     app.config['MONGO_URI'] = muri
@@ -101,7 +117,7 @@ def create_app(debug=False):
     )
     celery.conf.update(app.config)
 
-    config_file = '%s/resources/config.json' % app_base
+    config_file = '%s/resources/config.json' % APP_BASE
     if not os.path.exists(config_file):
         config = {'file': None, 'last_update': None}
         json.dump(config, open(config_file, 'w'), indent=4)

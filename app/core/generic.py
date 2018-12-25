@@ -10,13 +10,13 @@ from flask import (
 from flask import current_app as app
 
 
-app_base = os.path.dirname(os.path.realpath(__file__)).replace('/core', '')
+APP_BASE = os.path.dirname(os.path.realpath(__file__)).replace('/core', '')
 
 
 @core.route('/')
 def root():
     """Render the index page."""
-    config = json.load(open('%s/resources/config.json' % app_base))
+    config = json.load(open('%s/resources/config.json' % APP_BASE))
     return render_template('index.html', config=config)
 
 
