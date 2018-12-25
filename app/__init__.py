@@ -89,9 +89,13 @@ def create_app(debug=False):
         CELERY_BROKER_URL='redis://localhost:6379',
         CELERY_RESULT_BACKEND='redis://localhost:6379',
         CELERYBEAT_SCHEDULE={
-            'fetch': {
-                'task': 'fetch',
+            'fetch-rib': {
+                'task': 'fetch-rib',
                 'schedule': crontab(minute='*/5')
+            },
+            'fetch-as-name': {
+                'task': 'fetch-as-names',
+                'schedule': crontab(hour="*/12")
             }
         }
     )

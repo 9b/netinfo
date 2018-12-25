@@ -4,8 +4,11 @@ import celery
 import datetime
 import json
 import os
+import re
 import requests
 from pyasn import mrtx
+import codecs
+from urllib.request import urlopen
 
 from ..utils.helpers import str_now_time
 
@@ -13,10 +16,52 @@ from ..utils.helpers import str_now_time
 app_base = os.path.dirname(os.path.realpath(__file__)).replace('/tasks', '')
 
 
-@celery.task(name="heartbeat")
-def heartbeat():
-    """Look alive."""
-    logger.debug("I am the beat.")
+ASNAMES_URL = 'http://www.cidr-report.org/as2.0/autnums.html'
+HTML_FILENAME = "autnums.html"
+EXTRACT_ASNAME_C = re.compile(r"<a .+>AS(?P<code>.+?)\s*</a>\s*(?P<name>.*)", re.U)
+
+
+def __parse_asname_line(line):
+    match = EXTRACT_ASNAME_C.match(line)
+    return match.groups()
+
+
+def _html_to_dict(data):
+    """
+    Translates an HTML string available at `ASNAMES_URL` into a dict
+    :param data:
+    :type data: str
+    :return:
+    :rtype: dict
+    """
+    split = data.split("\n")
+    split = filter(lambda line: line.startswith("<a"), split)
+    fn = __parse_asname_line
+    return dict(map(fn, split))
+
+
+def download_asnames():
+    """
+    Downloads and parses to utf-8 asnames html file
+    """
+    http = urlopen(ASNAMES_URL)
+    data = http.read()
+    http.close()
+
+    raw_data = data.decode('latin-1')
+    raw_data = raw_data.encode('utf-8')
+    return raw_data.decode("utf-8")
+
+
+@celery.task(name="fetch-as-names")
+def fetch_as_names():
+    """Process the AS names"""
+    data = download_asnames()
+    data_dict = _html_to_dict(data)
+    data_json = json.dumps(data_dict)
+    output = '%s/resources/as_names.json' % app_base
+    with codecs.open(output, 'w', encoding="utf-8") as fs:
+        fs.write(data_json)
 
 
 def gen_request():
@@ -47,8 +92,8 @@ def to_download():
     return True
 
 
-@celery.task(name="fetch")
-def fetch(force=False):
+@celery.task(name="fetch-rib")
+def fetch_rib(force=False):
     """Process the routeview data."""
     if not to_download() or not force:
         return
