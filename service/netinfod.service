@@ -3,11 +3,18 @@ Description=NetInfo celery daemon
 After=network.target
 
 [Service]
-User=www-data
-Group=www-data
+User=root
+Group=root
 WorkingDirectory=/opt/netinfo
 Environment="PATH=/opt/netinfo/venv3/bin"
 ExecStart=/opt/netinfo/venv3/bin/celery worker -A worker.celery --loglevel=info -B
+KillSignal=SIGQUIT
+SyslogIdentifier=netinfod
+StandardOutput=syslog
+StandardError=syslog
+RemainAfterExit=yes
+Restart=always
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target

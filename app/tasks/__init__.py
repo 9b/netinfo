@@ -74,6 +74,8 @@ def gen_request():
     if not hour % 2 == 0:
         if len(str(hour)) == 1:
             hour = "0%d" % (hour - 1)
+        else:
+            hour = hour - 1
         fname = now.strftime('rib.%Y%m%d.')
         fname = fname + str(hour) + '00.bz2'
     url = "%s/%s/RIBS/%s" % (base, slug, fname)
