@@ -72,7 +72,7 @@ def gen_request():
     fname = now.strftime('rib.%Y%m%d.%H00.bz2')
     hour = int(now.strftime('%H'))
     if not hour % 2 == 0:
-        if len(hour) == 1:
+        if len(str(hour)) == 1:
             hour = "0%d" % (hour - 1)
         fname = now.strftime('rib.%Y%m%d.')
         fname = fname + str(hour) + '00.bz2'
