@@ -50,13 +50,17 @@ API Endpoints
 The following endpoints are available within the NetInfo service.
 
 **/lookup?ip=8.8.8.8**
+
 Get back AS and network information for an IP address.
 
 **/network-addresses?cidr=8.8.8.0/24**
+
 Get back all IP addresses as part of a network range.
 
 **/prefixes?asn=15169**
+
 Get back all prefixes advertised for a specific AS network.
 
 **/as-name?asn=15169**
+
 Get back the name of the AS network.
