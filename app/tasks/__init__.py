@@ -88,8 +88,12 @@ def to_download():
     fname = now.strftime('rib.%Y%m%d.%H00.bz2')
     hour = int(now.strftime('%H'))
     if not hour % 2 == 0:
+        if len(str(hour)) == 1:
+            hour = "0%d" % (hour - 1)
+        else:
+            hour = hour - 1
         fname = now.strftime('rib.%Y%m%d.')
-        fname = fname + str(hour - 1) + '00.bz2'
+        fname = fname + str(hour) + '00.bz2'
     config = json.load(open('%s/resources/config.json' % app_base))
     if fname == config['file']:
         return False
