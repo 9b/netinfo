@@ -1,6 +1,6 @@
 NetInfo
 =======
-NetInfo is a simple IP enrichment service to provide additional data related to an IP address. The primary utility of NetInfo is to serve as a API wrapper and management system for the PyASN library. NetInfo will automatically seek and download new route files, ensuring the database is always up-to-date. The local API queries the PyASN instance and returns back enrichment data for an IP address.
+NetInfo is a simple IP enrichment service to provide additional data related to an IP address. The primary utility of NetInfo is to serve as a API wrapper and management system for the PyASN and MaxMind GeoIP libraries. NetInfo will automatically seek and download new update files, ensuring the databases are always up-to-date. The local API queries the PyASN and GeoIP instance and returns back enrichment data for an IP address.
 
 Getting Started
 ---------------
