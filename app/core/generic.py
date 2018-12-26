@@ -24,6 +24,7 @@ def root():
 def force_db():
     """Force a fetching of the latest database."""
     logger.debug("Fetch the latest copy of the database")
+    celery.send_task('fetch-geoip')
     celery.send_task('fetch-as-names')
     celery.send_task('fetch-rib', kwargs={'force': True})
     return jsonify({'success': True,

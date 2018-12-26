@@ -28,20 +28,28 @@ Install the services and start them. You can then access the API through http://
 
 Sample Output
 -------------
-When calling http://localhost:7777/lookup?ip=8.8.8.8::
+When calling http://localhost:7777/lookup?ip=74.96.192.82::
 
-  {
-    "as_name": "GOOGLE - Google LLC, US",
-    "as_num": 15169,
-    "ip": "8.8.8.8",
-    "ip_hex": "0x8080808",
-    "ip_version": 4,
-    "network": "8.8.8.0/24",
-    "network_broadcast": "8.8.8.255",
-    "network_hostmask": "0.0.0.255",
-    "network_netmask": "255.255.255.0",
-    "network_size": 256
-  }
+    {
+      "as_name": "UUNET - MCI Communications Services, Inc. d/b/a Verizon Business, US",
+      "as_num": 701,
+      "city": "Vienna",
+      "country_iso": "US",
+      "country_name": "United States",
+      "ip": "74.96.192.82",
+      "ip_hex": "0x4a60c052",
+      "ip_version": 4,
+      "latitude": 38.8977,
+      "longitude": -77.288,
+      "network": "74.96.0.0/16",
+      "network_broadcast": "74.96.255.255",
+      "network_hostmask": "0.0.255.255",
+      "network_netmask": "255.255.0.0",
+      "network_size": 65536,
+      "postal_code": "22181",
+      "region_iso": "VA",
+      "region_name": "Virginia"
+    }
 
 Unlike the standard PyASN library, NetInfo will add the AS name to the response, additional network data and the original IP address that was requested.
 
@@ -51,7 +59,7 @@ The following endpoints are available within the NetInfo service.
 
 **/lookup?ip=8.8.8.8**
 
-Get back AS and network information for an IP address.
+Get back AS, network information and geolocation for an IP address.
 
 **/network-addresses?cidr=8.8.8.0/24**
 
@@ -64,3 +72,7 @@ Get back all prefixes advertised for a specific AS network.
 **/as-name?asn=15169**
 
 Get back the name of the AS network.
+
+**/geolocation?ip=8.8.8.8**
+
+Get back geolocation information for an IP address.

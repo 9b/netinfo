@@ -6,6 +6,8 @@ import json
 import os
 import re
 import requests
+import tarfile
+import shutil
 from pyasn import mrtx
 import codecs
 from urllib.request import urlopen
@@ -49,7 +51,7 @@ def fetch_as_names():
     data = download_asnames()
     data_dict = _html_to_dict(data)
     data_json = json.dumps(data_dict)
-    output = '%s/resources/as_names.json' % APP_BASE
+    output = '%s/resources/asn/as_names.json' % APP_BASE
     with codecs.open(output, 'w', encoding="utf-8") as fs:
         fs.write(data_json)
 
@@ -84,7 +86,7 @@ def to_download():
     now = datetime.datetime.utcnow()
     fname = build_filename()
     config = json.load(open('%s/resources/config.json' % APP_BASE))
-    if fname == config['file']:
+    if fname == config['asn']['last_rib_file']:
         return False
     return True
 
@@ -97,15 +99,48 @@ def fetch_rib(force=False):
     logger.debug("Downloading the latest RIB")
     meta = gen_request()
     response = requests.get(meta['url'])
-    path = '%s/resources/ribs/%s' % (APP_BASE, meta['filename'])
+    path = '%s/resources/asn/ribs/%s' % (APP_BASE, meta['filename'])
     open(path, 'wb').write(response.content)
     logger.debug("RIB file saved")
-    current = '%s/resources/current' % (APP_BASE)
+    current = '%s/resources/asn/current' % (APP_BASE)
     logger.debug("Converting RIB to database format")
     prefixes = mrtx.parse_mrt_file(path, print_progress=False,
                                    skip_record_on_error=True)
     mrtx.dump_prefixes_to_file(prefixes, current, path)
     logger.debug("Updated the database")
-    config = {'file': meta['filename'], 'last_update': str_now_time()}
+    config = json.load(open('%s/resources/config.json' % APP_BASE))
+    config['asn']['last_rib_file'] = meta['filename']
+    config['asn']['last_update'] = str_now_time()
     json.dump(config, open('%s/resources/config.json' % APP_BASE, 'w'),
               indent=4)
+
+
+@celery.task(name="fetch-geoip")
+def fetch_geoip(force=False):
+    """Process the maxmind geoip database."""
+    url = "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz"
+    response = requests.get(url)
+    path = '%s/resources/geoip/GeoLite2-City.tar.gz' % (APP_BASE)
+    open(path, 'wb').write(response.content)
+    tar = tarfile.open(path)
+    files = tar.getmembers()
+    tar.extractall(path='%s/resources/geoip/' % APP_BASE)
+    tar.close()
+
+    for file in files:
+        if not file.name.endswith('.mmdb'):
+            continue
+        shutil.move('%s/resources/geoip/%s' % (APP_BASE, file.name),
+                    '%s/resources/geoip/current' % APP_BASE)
+    config = json.load(open('%s/resources/config.json' % APP_BASE))
+    config['geoip']['last_update'] = str_now_time()
+    json.dump(config, open('%s/resources/config.json' % APP_BASE, 'w'),
+              indent=4)
+    path = '%s/resources/geoip/' % APP_BASE
+    for f in os.listdir('%s/resources/geoip/' % APP_BASE):
+        if f in ['current', '__init__.py']:
+            continue
+        try:
+            shutil.rmtree(path + f)
+        except:
+            os.remove(path + f)

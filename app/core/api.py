@@ -3,7 +3,7 @@ import os
 import pyasn
 
 from . import core
-from .. import mongo, logger, celery, check_asndb
+from .. import mongo, logger, celery, check_asndb, check_geoip
 from flask import (jsonify, request)
 from flask import current_app as app
 from netaddr import IPAddress, IPNetwork
@@ -11,6 +11,7 @@ from netaddr import IPAddress, IPNetwork
 
 @core.route('/lookup', methods=['GET'])
 @check_asndb
+@check_geoip
 def lookup():
     """Enrich IP address."""
     ip_addr = request.args.get('ip')
@@ -25,6 +26,17 @@ def lookup():
               'network_netmask': str(__network.netmask),
               'network_hostmask': str(__network.hostmask),
               'network_size': int(__network.size)}
+    if app.config['GEOIPDB']:
+        response = app.config['GEOIPDB'].city(ip_addr)
+        geo = {'country_name': response.country.name,
+               'country_iso': response.country.iso_code,
+               'latitude': response.location.latitude,
+               'longitude': response.location.longitude,
+               'region_name': response.subdivisions.most_specific.name,
+               'region_iso': response.subdivisions.most_specific.iso_code,
+               'city': response.city.name,
+               'postal_code': response.postal.code}
+        record.update(geo)
     if app.config['DEBUG']:
         mongo.db.queries.insert(record)
         _ = record.pop('_id', None)
@@ -65,6 +77,26 @@ def as_name():
     asn = request.args.get('asn')
     record = {'as_name': str(app.config['ASNDB'].get_as_name(int(asn))),
               'as_num': asn}
+    if app.config['DEBUG']:
+        mongo.db.queries.insert(record)
+        _ = record.pop('_id', None)
+    return jsonify(record)
+
+
+@core.route('/geolocation', methods=['GET'])
+@check_geoip
+def geolocation():
+    """Enrich IP address with geolocation."""
+    ip_addr = request.args.get('ip')
+    response = app.config['GEOIPDB'].city(ip_addr)
+    record = {'country_name': response.country.name,
+              'country_iso': response.country.iso_code,
+              'latitude': response.location.latitude,
+              'longitude': response.location.longitude,
+              'region_name': response.subdivisions.most_specific.name,
+              'region_iso': response.subdivisions.most_specific.iso_code,
+              'city': response.city.name,
+              'postal_code': response.postal.code}
     if app.config['DEBUG']:
         mongo.db.queries.insert(record)
         _ = record.pop('_id', None)

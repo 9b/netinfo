@@ -1,4 +1,5 @@
 """."""
+import geoip2.database
 import json
 import logging
 import os
@@ -53,13 +54,30 @@ def check_asndb(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         config = json.load(open('%s/resources/config.json' % APP_BASE))
-        delta = (now_time() - load_time(config['last_update'])).seconds
+        delta = (now_time() - load_time(config['asn']['last_update'])).seconds
         if delta > REFRESH_TIME or not app.config['ASNDB']:
             try:
-                app.config['ASNDB'] = pyasn.pyasn('%s/resources/current' % APP_BASE,
-                                                  as_names_file='%s/resources/as_names.json' % APP_BASE)
-                app.config['ASNDB'].loaded = config['file']
+                app.config['ASNDB'] = pyasn.pyasn('%s/resources/asn/current' % APP_BASE,
+                                                  as_names_file='%s/resources/asn/as_names.json' % APP_BASE)
+                app.config['ASNDB'].loaded = config['asn']['last_rib_file']
             except Exception as e:
+                raise Exception("Database has not been initialized.")
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def check_geoip(f):
+    """Check if the GeoIP database should be updated.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        config = json.load(open('%s/resources/config.json' % APP_BASE))
+        delta = (now_time() - load_time(config['geoip']['last_update'])).seconds
+        if delta > REFRESH_TIME or not app.config['GEOIPDB']:
+            try:
+                app.config['GEOIPDB'] = geoip2.database.Reader('%s/resources/geoip/current' % APP_BASE)
+            except Exception as e:
+                print(e)
                 raise Exception("Database has not been initialized.")
         return f(*args, **kwargs)
     return decorated_function
@@ -96,6 +114,7 @@ def create_app(debug=False):
     app.config['MONGO_DBNAME'] = 'netinfo'
     app.config['MONGO_HOST'] = 'localhost'
     app.config['ASNDB'] = None
+    app.config['GEOIPDB'] = None
     app.config['DEBUG'] = debug
     muri = "mongodb://%s:27017/%s" % (app.config['MONGO_HOST'],
                                       app.config['MONGO_DBNAME'])
@@ -112,6 +131,10 @@ def create_app(debug=False):
             'fetch-as-name': {
                 'task': 'fetch-as-names',
                 'schedule': crontab(hour="*/12")
+            },
+            'fetch-geo': {
+                'task': 'fetch_geoip',
+                'schedule': crontab(hour=7, minute=30, day_of_week=1)
             }
         }
     )
@@ -119,7 +142,8 @@ def create_app(debug=False):
 
     config_file = '%s/resources/config.json' % APP_BASE
     if not os.path.exists(config_file):
-        config = {'file': None, 'last_update': None}
+        config = {'asn': {'last_rib_file': None, 'last_update': None},
+                  'geoip': {'last_update': None}}
         json.dump(config, open(config_file, 'w'), indent=4)
 
     from .core import core as core_blueprint
