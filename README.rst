@@ -24,7 +24,21 @@ Install the requirements::
 
     $ (venv3) pip install -r requirements.txt
 
-Install the services and start them. You can then access the API through http://localhost:7777 for more details.
+Install the services and start them. 
+
+    See `Services README`_.
+    
+Or start the Celery Daemon::
+
+    $ (venv3) /opt/netinfo/venv3/bin/celery worker -A worker.celery --loglevel=info -B
+    
+And start the server::
+
+    $ (venv3) /opt/netinfo/venv3/bin/uwsgi --ini wsgi.ini
+
+You can then access the API through http://localhost:7777 for more details.
+
+.. _Services README: https://github.com/9b/netinfo/blob/master/service/README.rst
 
 Sample Output
 -------------
