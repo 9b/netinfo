@@ -1,4 +1,18 @@
-"""Tasks related to celery."""
+"""Tasks related to asynchronous processing.
+
+For all intents and purposes, this is where the magic of the database syncing
+takes place. There's some extra functions in here that should really move over
+to the utils file, but it was easier to keep the logic in one spot during
+testing.
+
+Each of the celery decorated functions are tasks that can be called directly
+from the Flask web application aka the API or via some scheduler. These tasks
+will all run as a non-blocking call if made through the API or scheduler; they
+just run and log out to the Celery handler.
+
+If you're using the service wrappers, this is netinfod. And if it wasn't clear,
+this needs to be running in order for any real processing to take place.
+"""
 from .. import mongo, logger
 import celery
 import datetime
