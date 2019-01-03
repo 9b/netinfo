@@ -12,6 +12,10 @@ Check out netinfo to `/opt/`::
 
     $ cd /opt && git clone https://github.com/9b/netinfo.git
 
+Change directory to the `netinfo` working directory::
+
+    $ cd netinfo/
+
 Setup the virtualenv::
 
     $ virtualenv -p python3 venv3
