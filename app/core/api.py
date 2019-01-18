@@ -57,6 +57,21 @@ def network_addresses():
     return jsonify(record)
 
 
+@core.route('/as', methods=['GET'])
+@check_asndb
+def as_enrich():
+    """Enrich the AS."""
+    asn = request.args.get('asn')
+    prefixes = list(app.config['ASNDB'].get_as_prefixes(asn))
+    record = {'as_num': int(asn), 'prefixes': prefixes,
+              'prefix_count': len(prefixes),
+              'as_name': str(app.config['ASNDB'].get_as_name(int(asn)))}
+    if app.config['DEBUG']:
+        mongo.db.queries.insert(record)
+        _ = record.pop('_id', None)
+    return jsonify(record)
+
+
 @core.route('/prefixes', methods=['GET'])
 @check_asndb
 def prefixes():

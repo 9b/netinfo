@@ -7,7 +7,7 @@ User=root
 Group=root
 WorkingDirectory=/opt/netinfo
 Environment="PATH=/opt/netinfo/venv3/bin"
-ExecStart=/opt/netinfo/venv3/bin/celery worker -A worker.celery --loglevel=info -B
+ExecStart=/opt/netinfo/venv3/bin/celery worker -A worker.celery --loglevel=info -B -n netinfod
 KillSignal=SIGQUIT
 SyslogIdentifier=netinfod
 StandardOutput=syslog
