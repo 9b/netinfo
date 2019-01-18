@@ -6,10 +6,11 @@ chardet==3.0.4
 Click==7.0
 Flask==1.0.2
 Flask-PyMongo==2.2.0
+geoip2==2.9.0
 idna==2.8
 itsdangerous==1.1.0
 Jinja2==2.10
-kombu==4.2.2
+kombu==4.2.2.post1
 MarkupSafe==1.1.0
 netaddr==0.7.19
 pyasn==1.6.0b1
