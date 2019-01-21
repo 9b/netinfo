@@ -15,17 +15,31 @@ from netaddr import IPAddress, IPNetwork
 def lookup():
     """Enrich IP address."""
     ip_addr = request.args.get('ip')
-    data = app.config['ASNDB'].lookup(ip_addr)
     __ip_addr = IPAddress(ip_addr)
-    __network = IPNetwork(data[1])
-    record = {'as_num': int(data[0]), 'network': data[1],
-              'as_name': str(app.config['ASNDB'].get_as_name(data[0])),
-              'ip': ip_addr, 'ip_version': int(__ip_addr.version),
-              'ip_hex': hex(__ip_addr),
-              'network_broadcast': str(__network.broadcast),
-              'network_netmask': str(__network.netmask),
-              'network_hostmask': str(__network.hostmask),
-              'network_size': int(__network.size)}
+
+    record = {
+        'as_num': None,
+        'network': None,
+        'as_name': None,
+        'ip': ip_addr,
+        'ip_version': int(__ip_addr.version),
+        'ip_hex': hex(__ip_addr),
+        'network_broadcast': None,
+        'network_netmask': None,
+        'network_hostmask': None,
+        'network_size': None}
+
+    data = app.config['ASNDB'].lookup(ip_addr)
+    if data:
+        __network = IPNetwork(data[1])
+        obj = {'as_num': int(data[0]), 'network': data[1],
+               'as_name': str(app.config['ASNDB'].get_as_name(data[0])),
+               'network_broadcast': str(__network.broadcast),
+               'network_netmask': str(__network.netmask),
+               'network_hostmask': str(__network.hostmask),
+               'network_size': int(__network.size)}
+        record.update(obj)
+
     if app.config['GEOIPDB']:
         response = app.config['GEOIPDB'].city(ip_addr)
         geo = {'country_name': response.country.name,

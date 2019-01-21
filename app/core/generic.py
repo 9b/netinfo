@@ -20,6 +20,15 @@ def root():
     return render_template('index.html', config=config)
 
 
+@core.route('/force-geo')
+def force_db():
+    """Force a fetching of the latest database."""
+    logger.debug("Fetch the latest copy of the database")
+    celery.send_task('fetch-geoip')
+    return jsonify({'success': True,
+                    'message': 'This will take a few minutes to complete'})
+
+
 @core.route('/force-db')
 def force_db():
     """Force a fetching of the latest database."""
