@@ -21,7 +21,7 @@ def root():
 
 
 @core.route('/force-geo')
-def force_db():
+def force_geo():
     """Force a fetching of the latest database."""
     logger.debug("Fetch the latest copy of the database")
     celery.send_task('fetch-geoip')
