@@ -14,12 +14,14 @@ from flask_pymongo import PyMongo
 from functools import wraps
 from flask import current_app as app
 from app.utils.helpers import now_time, load_time
+from werkzeug.contrib.cache import MemcachedCache
 
 APP_NAME = 'netinfo'
 APP_BASE = os.path.dirname(os.path.realpath(__file__))
 REFRESH_TIME = 1800
 
 mongo = PyMongo()
+cache = MemcachedCache(['127.0.0.1:11211'])
 celery = Celery(APP_NAME)
 logger = logging.getLogger(APP_NAME)
 logger.setLevel(logging.DEBUG)

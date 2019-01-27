@@ -3,7 +3,7 @@ import os
 import pyasn
 
 from . import core
-from .. import mongo, logger, celery, check_asndb, check_geoip
+from .. import mongo, logger, celery, check_asndb, check_geoip, cache
 from flask import (jsonify, request)
 from flask import current_app as app
 from netaddr import IPAddress, IPNetwork
@@ -15,6 +15,9 @@ from netaddr import IPAddress, IPNetwork
 def lookup():
     """Enrich IP address."""
     ip_addr = request.args.get('ip')
+    cached = cache.get(ip_addr)
+    if cached:
+        return jsonify(cached)
     __ip_addr = IPAddress(ip_addr)
 
     record = {
@@ -54,6 +57,7 @@ def lookup():
     if app.config['DEBUG']:
         mongo.db.queries.insert(record)
         _ = record.pop('_id', None)
+    cache.set(ip_addr, record, timeout=3600)
     return jsonify(record)
 
 
